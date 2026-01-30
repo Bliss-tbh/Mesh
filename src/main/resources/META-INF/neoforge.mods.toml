@@ -12,6 +12,7 @@ displayName = "Mesh" #mandatory
 #credits="" #optional
 authors = "Bliss" #optional
 description = '''Distributed Server Architecture'''
+displayTest="NONE"
 [[mixins]]
 config = "mesh.mixins.json"
 

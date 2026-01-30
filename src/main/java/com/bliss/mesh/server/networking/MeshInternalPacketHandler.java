@@ -54,21 +54,29 @@ public class MeshInternalPacketHandler extends SimpleChannelInboundHandler<ByteB
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
+        if (msg.readableBytes() < 4) return; // Safety check
+
         int chunkState = msg.readInt();
+
+        // ID only packets (4 bytes total)
+        if (chunkState == MeshInternalPackets.CLAIM.id) {
+            checkGenerationQueue();
+            return; // Exit early! Don't try to read X and Z.
+        }
+
+        // Packets that include Coordinates (ID + X + Z = 12 bytes total)
+        if (msg.readableBytes() < 8) return; // Ensure X and Z are actually there
         int x = msg.readInt();
         int z = msg.readInt();
 
-        if (chunkState == MeshInternalPackets.CLAIM.id) {
-            checkGenerationQueue();
-        }
-        else if (chunkState == MeshInternalPackets.REQUEST.id) {
+        if (chunkState == MeshInternalPackets.REQUEST.id) {
             handleRequestFromTickHost(x, z);
         }
         else if (chunkState == MeshInternalPackets.PUSH.id) {
             handleDataPush(msg, x, z);
         }
         else if (chunkState == MeshInternalPackets.CLAIM_INFO.id) {
-            generateChunk(x,z);
+            generateChunk(x, z);
         }
     }
 

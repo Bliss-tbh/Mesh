@@ -61,4 +61,5 @@ public class Mesh {
 
     //TODO: I keep jumping between ChunkPos, ChunkPos.asLong and the x and z ints, I should probably just stick with one.
     //TODO: Client stuffs
+    //TODO: Make openable in any order
 }
