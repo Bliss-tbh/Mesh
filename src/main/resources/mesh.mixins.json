@@ -1,11 +1,20 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.bliss.mesh.mixin",
+  "package": "com.bliss.mesh.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
   ],
   "client": [
+    "client.ClientChunkCacheAccessor",
+    "client.ClientPacketListenerAccessor"
+  ],
+  "server": [
+    "server.ChunkMapAccessor",
+    "server.ChunkStorageAccessor",
+    "server.IOWorkerMixin",
+    "server.MinecraftServerMixin",
+    "server.ServerChunkCacheAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
