@@ -4,6 +4,7 @@
   "package": "com.bliss.mesh.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "server.GenerationChunkHolderMixin"
   ],
   "client": [
     "client.ClientChunkCacheAccessor",

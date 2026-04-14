@@ -3,8 +3,7 @@ package com.bliss.mesh.mixins.server;
 import com.bliss.mesh.Mesh;
 import com.bliss.mesh.common.MeshConfig;
 import com.bliss.mesh.common.MeshModes;
-import com.bliss.mesh.server.MeshWorker;
-import com.bliss.mesh.server.networking.MeshChunkOrchestrator;
+import com.bliss.mesh.generation.ChunkTracker;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.storage.IOWorker;
@@ -27,17 +26,13 @@ public class IOWorkerMixin {
     @Inject(method = "loadAsync", at = @At("HEAD"), cancellable = true)
     private void mesh$interceptLoadAsync(ChunkPos pos, CallbackInfoReturnable<CompletableFuture<Optional<CompoundTag>>> cir) {
         if (MeshConfig.MODE.get() == MeshModes.TICK_HOST && this.storage.info().type().equals("chunk")) {
-            if (MeshWorker.BYPASS_MESH.get()) {
-                Mesh.LOGGER.debug("[Mesh-IO] Bypassing mesh for chunk {}", pos);
-                cir.setReturnValue(CompletableFuture.completedFuture(Optional.empty()));
-                return;
-            }
-            CompletableFuture<CompoundTag> networkFuture = MeshChunkOrchestrator.getFuture(pos.x, pos.z);
+            boolean alreadyRequested = ChunkTracker.isRequested(pos.x, pos.z);
+            CompletableFuture<CompoundTag> networkFuture = ChunkTracker.getFuture(pos.x, pos.z);
 
-            if (!MeshChunkOrchestrator.isRequested(pos.x, pos.z)) {
+            if (!alreadyRequested) {
                 Mesh.LOGGER.debug("[Mesh-IO] Requesting chunk {} from Chunk Host", pos);
-                MeshChunkOrchestrator.markRequested(pos.x, pos.z, true); //waiting for chunk so localy say this is active
-                Mesh.PACKET_SENDER.requestChunkFromStorage(pos.x, pos.z); //actual request
+                Mesh.PACKET_SENDER.tickHost.requestChunkFromStorage(pos.x, pos.z);
+                ChunkTracker.markRequested(pos.x, pos.z, true);
             } else {
                 Mesh.LOGGER.debug("[Mesh-IO] Request already in flight for chunk {}", pos);
             }

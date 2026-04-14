@@ -2,10 +2,8 @@ package com.bliss.mesh;
 
 import com.bliss.mesh.common.MeshConfig;
 import com.bliss.mesh.common.MeshModes;
-import com.bliss.mesh.server.MeshWorker;
-import com.bliss.mesh.server.networking.MeshInternalPacketSender;
-import com.bliss.mesh.server.chunkhost.ChunkHost;
-import com.bliss.mesh.server.tickhost.TickHost;
+import com.bliss.mesh.generation.common.MeshWorker;
+import com.bliss.mesh.networking.common.sender.PacketSenderService;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,17 +19,27 @@ import org.slf4j.Logger;
 public class Mesh {
     public static final String MODID = "mesh";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static MeshInternalPacketSender PACKET_SENDER;
+    public static PacketSenderService PACKET_SENDER = new PacketSenderService();
 
     public Mesh(IEventBus modEventBus, ModContainer container) {
         LOGGER.info("-- Mesh Init --");
-        LOGGER.info("Jack Holding is a sussy baka");
+        LOGGER.info("Jack Holding is a sussy baka (◕ᗜ◕)");
 
         NeoForge.EVENT_BUS.register(this);
         container.registerConfig(ModConfig.Type.STARTUP, MeshConfig.SPEC);
 
         modEventBus.addListener(this::onConfigLoad);
-        start();
+
+        MeshModes currentMode = MeshConfig.MODE.get();
+        if (currentMode == MeshModes.TICK_HOST) {
+            LOGGER.info("-> TICK MODE");
+            PACKET_SENDER.init(MeshConfig.REMOTE_ADDRESS.get(), MeshConfig.PORT.get(), false);
+        } else if (currentMode == MeshModes.CHUNK_HOST) {
+            LOGGER.info("-> CHUNK MODE");
+            PACKET_SENDER.init(MeshConfig.REMOTE_ADDRESS.get(), MeshConfig.PORT.get(), true);
+        } else {
+            LOGGER.info("-> STANDARD MODE (Client/Normal Server)");
+        }
     }
 
     @SubscribeEvent
@@ -43,19 +51,6 @@ public class Mesh {
     private void onConfigLoad(ModConfigEvent event) {
         if (event.getConfig().getModId().equals(MODID)) {
             LOGGER.info("Mesh config loaded!");
-        }
-    }
-
-    public void start() {
-        MeshModes currentMode = MeshConfig.MODE.get();
-        if (currentMode == MeshModes.TICK_HOST) {
-            LOGGER.info("-> TICK MODE");
-            new TickHost();
-        } else if (currentMode == MeshModes.CHUNK_HOST) {
-            LOGGER.info("-> CHUNK MODE");
-            new ChunkHost();
-        } else {
-            LOGGER.info("-> STANDARD MODE (Client/Normal Server)");
         }
     }
 

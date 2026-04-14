@@ -16,11 +16,8 @@ public class MinecraftServerMixin {
     @Inject(method = "tickChildren", at = @At("HEAD"), cancellable = true)
     private void mesh$disableTickingOnChunkHost(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         if (MeshConfig.MODE.get() == MeshModes.CHUNK_HOST) {
-            // 1. Still process networking (Keep the Mesh connection alive)
             MinecraftServer server = (MinecraftServer)(Object)this;
             server.getConnection().tick();
-
-            // 3. CANCEL everything else (No entity AI, no block ticks, no weather)
             ci.cancel();
         }
     }
